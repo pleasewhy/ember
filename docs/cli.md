@@ -21,22 +21,21 @@ ember
 
 ## 2. 安装与运行
 
-### 2.1 直接从 workspace 运行
-
 ```bash
-cargo run --manifest-path /home/hy/workplace/ember/Cargo.toml -p ember-cli -- --help
-```
-
-### 2.2 安装为本地二进制
-
-```bash
-cargo install --path /home/hy/workplace/ember/crates/ember-cli
+cargo install --git https://github.com/pleasewhy/ember ember-cli
 ```
 
 安装后即可直接执行：
 
 ```bash
 ember --help
+```
+
+如果你还需要查看源码或 examples：
+
+```bash
+git clone https://github.com/pleasewhy/ember.git
+cd ember
 ```
 
 ## 3. 最小工作流

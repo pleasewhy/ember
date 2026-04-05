@@ -57,18 +57,19 @@ rustup target add wasm32-wasip2
 
 如果你希望优先用 `cargo component build`，还可以自行安装 `cargo-component`。`ember build` 在检测不到它时会自动回退到标准 `cargo build --target wasm32-wasip2`。
 
-### 3.2 初始化一个 worker
-
-如果你在本仓库里开发 CLI，可直接这样使用：
+安装 CLI：
 
 ```bash
-cargo run --manifest-path /home/hy/workplace/ember/Cargo.toml -p ember-cli -- init hello-worker
-cd hello-worker
+cargo install --git https://github.com/pleasewhy/ember ember-cli
 ```
 
-如果你已经安装了 CLI 二进制，则直接使用：
+### 3.2 初始化一个 worker
+
+如果你还没有源码仓库，可以先克隆公开仓库：
 
 ```bash
+git clone https://github.com/pleasewhy/ember.git
+cd ember
 ember init hello-worker
 cd hello-worker
 ```

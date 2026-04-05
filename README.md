@@ -32,16 +32,28 @@ crates/
   ember-sdk/
 examples/
   hello-worker/
+  pocket-tasks-worker/
+  secret-worker/
   sqlite-worker/
+```
+
+## Getting Started
+
+```bash
+git clone https://github.com/pleasewhy/ember.git
+cd ember
+cargo install --git https://github.com/pleasewhy/ember ember-cli
 ```
 
 ## Quick Validation
 
 ```bash
-cargo check --manifest-path /home/hy/workplace/ember/Cargo.toml
-cargo check --manifest-path /home/hy/workplace/ember/Cargo.toml -p ember-cli
-cargo check --manifest-path /home/hy/workplace/ember/examples/hello-worker/Cargo.toml
-cargo check --manifest-path /home/hy/workplace/ember/examples/sqlite-worker/Cargo.toml
+cargo check --workspace
+cargo check -p ember-cli
+cargo check --manifest-path examples/hello-worker/Cargo.toml
+cargo check --manifest-path examples/sqlite-worker/Cargo.toml
+cargo check --manifest-path examples/secret-worker/Cargo.toml
+cargo check --manifest-path examples/pocket-tasks-worker/Cargo.toml
 ```
 
 ## Documentation
@@ -113,16 +125,12 @@ Not included here:
 ## CLI Quickstart
 
 ```bash
-cargo run --manifest-path /home/hy/workplace/ember/Cargo.toml -p ember-cli -- init hello-worker
+git clone https://github.com/pleasewhy/ember.git
+cd ember
+ember init hello-worker
 cd hello-worker
-cargo run --manifest-path /home/hy/workplace/ember/Cargo.toml -p ember-cli -- build
-cargo run --manifest-path /home/hy/workplace/ember/Cargo.toml -p ember-cli -- dev --addr 127.0.0.1:3000
-```
-
-If you prefer an installed binary instead of `cargo run`, use:
-
-```bash
-cargo install --path /home/hy/workplace/ember/crates/ember-cli
+ember build
+ember dev --addr 127.0.0.1:3000
 ```
 
 If you need to publish to a compatible control plane, log in with an API token first:

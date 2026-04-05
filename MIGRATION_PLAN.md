@@ -88,7 +88,9 @@ Left in the private platform repository for now:
 
 ## Validation
 
-- `cargo check --manifest-path /home/hy/workplace/ember/Cargo.toml`
-- `cargo check --manifest-path /home/hy/workplace/ember/Cargo.toml -p ember-cli`
-- `cargo check --manifest-path /home/hy/workplace/ember/examples/hello-worker/Cargo.toml`
-- `cargo check --manifest-path /home/hy/workplace/ember/examples/sqlite-worker/Cargo.toml`
+- `cargo check --workspace`
+- `cargo check -p ember-cli`
+- `cargo check --manifest-path examples/hello-worker/Cargo.toml`
+- `cargo check --manifest-path examples/sqlite-worker/Cargo.toml`
+- `cargo check --manifest-path examples/secret-worker/Cargo.toml`
+- `cargo check --manifest-path examples/pocket-tasks-worker/Cargo.toml`

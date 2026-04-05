@@ -13,7 +13,20 @@
 - 发布、部署、回滚、查询状态
 - 管理环境变量、secret 和 SQLite 备份
 
-## 2. 最小工作流
+## 2. 安装
+
+```bash
+cargo install --git https://github.com/pleasewhy/ember ember-cli
+```
+
+如果你还需要查看源码或 examples：
+
+```bash
+git clone https://github.com/pleasewhy/ember.git
+cd ember
+```
+
+## 3. 最小工作流
 
 ```bash
 ember init hello-worker
@@ -29,7 +42,7 @@ ember dev --addr 127.0.0.1:3000
 curl http://127.0.0.1:3000/
 ```
 
-## 3. 配置文件
+## 4. 配置文件
 
 CLI 登录后会把凭据写到本地配置目录：
 
@@ -48,7 +61,7 @@ $XDG_CONFIG_HOME/ember/config.toml
 XDG_CONFIG_HOME=/tmp/ember-cli-config ember whoami
 ```
 
-## 4. 命令说明
+## 5. 命令说明
 
 ### `ember init <path>`
 
@@ -127,7 +140,7 @@ ember delete-version hello-worker <version>
 ember delete-app hello-worker
 ```
 
-## 5. 环境变量和 Secret
+## 6. 环境变量和 Secret
 
 环境变量：
 
@@ -145,14 +158,14 @@ ember secrets set hello-worker openai-api-key <secret-value>
 ember secrets delete hello-worker openai-api-key
 ```
 
-## 6. SQLite 备份与恢复
+## 7. SQLite 备份与恢复
 
 ```bash
 ember sqlite backup hello-worker ./backup.sqlite3
 ember sqlite restore hello-worker ./backup.sqlite3
 ```
 
-## 7. 组件签名发布
+## 8. 组件签名发布
 
 发布前可设置：
 
@@ -168,7 +181,7 @@ ember sqlite restore hello-worker ./backup.sqlite3
 ember publish
 ```
 
-## 8. 常见问题
+## 9. 常见问题
 
 ### `ember build` 提示缺少 `wasm32-wasip2`
 

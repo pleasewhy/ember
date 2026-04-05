@@ -19,9 +19,30 @@ A minimal SQLite-backed worker showing:
 - typed SQLite reads
 - state mutation through simple HTTP handlers
 
+## `secret-worker`
+
+A minimal secret-backed worker showing:
+
+- environment-backed secret injection
+- direct `wasi:http` request handling without extra framework code
+- how to read platform-provided secrets at runtime
+
+## `pocket-tasks-worker`
+
+A fuller SQLite-backed worker showing:
+
+- CRUD routes through `ember-sdk::http::Router`
+- request body parsing and JSON responses
+- persistent task storage on the built-in SQLite host API
+- a realistic API shape that can back a small frontend
+
 ## Validation
 
 ```bash
-cargo check --manifest-path /home/hy/workplace/ember/examples/hello-worker/Cargo.toml
-cargo check --manifest-path /home/hy/workplace/ember/examples/sqlite-worker/Cargo.toml
+git clone https://github.com/pleasewhy/ember.git
+cd ember
+cargo check --manifest-path examples/hello-worker/Cargo.toml
+cargo check --manifest-path examples/sqlite-worker/Cargo.toml
+cargo check --manifest-path examples/secret-worker/Cargo.toml
+cargo check --manifest-path examples/pocket-tasks-worker/Cargo.toml
 ```
