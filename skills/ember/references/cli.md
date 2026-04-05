@@ -52,7 +52,7 @@ $XDG_CONFIG_HOME/ember/config.toml
 
 兼容旧链路时，还会回退尝试：
 
-- `$XDG_CONFIG_HOME/flickercloud/config.toml`
+- `$XDG_CONFIG_HOME/ember/config.toml`
 - `$XDG_CONFIG_HOME/wkr/config.toml`
 
 临时调试建议使用独立配置目录：

@@ -70,7 +70,7 @@ CLI for:
 
 - `ember init` to scaffold a minimal worker project
 - `ember build` and `ember dev` for local iteration
-- `ember login/publish/deploy/...` for compatible external control planes
+- `ember whoami/publish/deploy/...` for the hosted embercloud control plane
 
 ### `ember-sdk`
 
@@ -133,10 +133,10 @@ ember build
 ember dev --addr 127.0.0.1:3000
 ```
 
-If you need to publish to a compatible control plane, log in with an API token first:
+If you need to publish to embercloud, pass an API token directly:
 
 ```bash
-ember login --server https://your-platform.example.com --token <api-token>
-ember publish
-ember deploy hello-worker <version>
+ember --token <api-token> whoami
+ember --token <api-token> publish
+ember --token <api-token> deploy hello-worker <version>
 ```

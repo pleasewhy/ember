@@ -1,15 +1,15 @@
 ---
-name: ember-worker
+name: ember
 description: Use for Ember worker development and integration with ember-cli, ember-sdk, worker.toml, local dev, compatible control-plane publish/deploy flows, SQLite, and platform host onboarding.
 ---
 
-# Ember Worker
+# Ember
 
 在当前任务涉及 `ember` worker 的开发、接入、调试、发布或平台嵌入时使用这个 skill。
 
 这个 skill 主要解决三类问题：
 
-- 如何用 `ember` CLI 初始化、构建、本地调试、登录、发布、部署和排查 worker
+- 如何用 `ember` CLI 初始化、构建、本地调试、带 token 发布、部署和排查 worker
 - 如何在 worker 项目里接入 `ember-sdk`，实现 HTTP Router、中间件、响应 helper、SQLite 和 migration
 - 如何把一个 worker 或运行时接到你自己的平台，包括 `worker.toml`、环境变量、secret、SQLite、兼容控制面 API 和宿主接入
 
@@ -25,11 +25,11 @@ description: Use for Ember worker development and integration with ember-cli, em
 ## 接入规则
 
 - 最小本地开发链路优先使用：`ember init -> ember build -> ember dev`
-- 需要平台交互时，再做：`ember login -> ember publish -> ember deploy`
+- 需要平台交互时，直接带 token 执行：`ember --token <token> publish -> ember --token <token> deploy`
 - 简单 HTTP handler 可直接用 `wstd::http`
 - 路由、中间件、统一响应、SQLite 持久化优先用 `ember-sdk`
 - 所有 worker 配置优先落在 `worker.toml`，不要在代码里发明额外约定
-- 临时调试 CLI 登录态时，优先用独立的 `XDG_CONFIG_HOME`
+- 临时调试 CLI token 时，优先用独立环境变量，避免把 token 写进长期环境
 - 涉及环境变量、secret、SQLite、发布版本、回滚时，严格按 CLI/API 文档里的命令和字段实现
 - 涉及平台嵌入时，优先复用 `ember-manifest`、`ember-runtime`、`ember-platform-host` 的现有边界，不要把控制面逻辑硬塞进 runtime crate
 

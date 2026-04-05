@@ -56,26 +56,35 @@ ember dev --addr 127.0.0.1:3000
 curl http://127.0.0.1:3000/
 ```
 
-## 4. 配置文件
+## 4. 云端认证
 
-登录后 CLI 会把凭据写到本地配置目录：
+云端命令现在固定访问：
 
 ```text
-$XDG_CONFIG_HOME/ember/config.toml
+https://embercloud.transairobot.com/api
 ```
 
-如果没有设置 `XDG_CONFIG_HOME`，则使用系统默认配置目录。
+你不需要再手动输入 `--server`，也不需要先 `login`。
 
-为了兼容旧链路，CLI 读取配置时还会回退尝试：
-
-- `$XDG_CONFIG_HOME/flickercloud/config.toml`
-- `$XDG_CONFIG_HOME/wkr/config.toml`
-
-临时调试时，建议使用独立配置目录：
+只需要提供 API token：
 
 ```bash
-XDG_CONFIG_HOME=/tmp/ember-cli-config ember whoami
+ember --token <api-token> whoami
 ```
+
+或者用环境变量：
+
+```bash
+EMBER_TOKEN=<api-token> ember whoami
+```
+
+为了兼容旧链路，CLI 仍会回退读取：
+
+- `EMBERCLOUD_TOKEN`
+- `WKR_API_TOKEN`
+- `$XDG_CONFIG_HOME/ember/config.toml`
+- `$XDG_CONFIG_HOME/embercloud/config.toml`
+- `$XDG_CONFIG_HOME/wkr/config.toml`
 
 ## 5. 命令说明
 
@@ -141,60 +150,37 @@ ember dev --addr 127.0.0.1:3000
 ember dev --skip-build --addr 127.0.0.1:3000
 ```
 
-### 5.4 `ember login`
-
-登录兼容控制面。
-
-你通常需要两项信息：
-
-- API 地址
-- API token
-
-示例：
-
-```bash
-ember login --server https://your-platform.example.com --token <api-token>
-```
-
-### 5.5 `ember whoami`
+### 5.4 `ember whoami`
 
 查看当前 CLI 使用的身份：
 
 ```bash
-ember whoami
+ember --token <api-token> whoami
 ```
 
-### 5.6 `ember logout`
-
-清理本地登录态：
-
-```bash
-ember logout
-```
-
-### 5.7 `ember publish`
+### 5.5 `ember publish`
 
 上传当前 worker 的 Wasm 产物和 manifest，创建一个新版本：
 
 ```bash
-ember publish
+ember --token <api-token> publish
 ```
 
 或者指定 manifest：
 
 ```bash
-ember publish --manifest ./worker.toml
+ember --token <api-token> publish --manifest ./worker.toml
 ```
 
-### 5.8 `ember deploy <app> <version>`
+### 5.6 `ember deploy <app> <version>`
 
 把某个版本切换成当前运行版本：
 
 ```bash
-ember deploy hello-worker <version>
+ember --token <api-token> deploy hello-worker <version>
 ```
 
-### 5.9 查询命令
+### 5.7 查询命令
 
 平台级查询：
 
@@ -334,10 +320,9 @@ ember dev --addr 127.0.0.1:3000
 ### 9.2 发布到控制面
 
 ```bash
-ember login --server https://your-platform.example.com --token <api-token>
-ember publish
-ember deploy hello-worker <version>
-ember status hello-worker
+ember --token <api-token> publish
+ember --token <api-token> deploy hello-worker <version>
+ember --token <api-token> status hello-worker
 ```
 
 ### 9.3 管理一个已上线服务

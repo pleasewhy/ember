@@ -25,11 +25,11 @@ Left in the private platform repository for now:
 
 ## Current Source Mapping
 
-- `wasm_cloud/crates/wkr-cli` -> `ember/crates/ember-cli`
-- `wasm_cloud/crates/wkr-manifest` -> `ember/crates/ember-manifest`
-- `wasm_cloud/crates/wkr-sdk` -> `ember/crates/ember-sdk`
-- `wasm_cloud/crates/wkr-runtime` -> `ember/crates/ember-runtime`
-- `wasm_cloud/crates/wkr-sdk/wit/world.wit` -> `ember/crates/ember-host-abi/wit/world.wit`
+- `embercloud/crates/wkr-cli` -> `ember/crates/ember-cli`
+- `embercloud/crates/wkr-manifest` -> `ember/crates/ember-manifest`
+- `embercloud/crates/wkr-sdk` -> `ember/crates/ember-sdk`
+- `embercloud/crates/wkr-runtime` -> `ember/crates/ember-runtime`
+- `embercloud/crates/wkr-sdk/wit/world.wit` -> `ember/crates/ember-host-abi/wit/world.wit`
 
 ## Migration Stages
 
@@ -80,7 +80,7 @@ Left in the private platform repository for now:
 
 ## Notes
 
-- The first migration pass is intentionally non-destructive. The private `wasm_cloud` workspace keeps
+- The first migration pass is intentionally non-destructive. The private `embercloud` workspace keeps
   working while `ember` is brought up in parallel.
 - Publishing ergonomics for the ABI crate are still a follow-up item after local compilation is stable.
 - The first host split is now done via `ember-platform-host`; the next refactor can make host

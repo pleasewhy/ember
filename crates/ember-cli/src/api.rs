@@ -275,62 +275,9 @@ impl ApiClient {
         .await
     }
 
-    pub async fn logout(&self) -> Result<()> {
-        self.request_empty(
-            self.http
-                .post(self.url("/v1/logout"))
-                .bearer_auth(&self.config.token),
-        )
-        .await
-    }
-
-    pub async fn token_login(server: String, token: String) -> Result<CliConfig> {
-        let mut config = CliConfig {
-            server,
-            token,
-            user_sub: None,
-            user_aud: None,
-            user_display_name: None,
-        };
-        let whoami = ApiClient::new(config.clone()).whoami().await?;
-        config.user_sub = whoami
-            .get("data")
-            .and_then(|value| value.get("sub"))
-            .and_then(Value::as_str)
-            .map(str::to_owned);
-        config.user_aud = whoami
-            .get("data")
-            .and_then(|value| value.get("aud"))
-            .and_then(Value::as_str)
-            .map(str::to_owned);
-        config.user_display_name = whoami
-            .get("data")
-            .and_then(|value| value.get("display_name"))
-            .and_then(Value::as_str)
-            .map(str::to_owned);
-        Ok(config)
-    }
-
     async fn request(&self, builder: reqwest::RequestBuilder) -> Result<Value> {
         request_json(builder).await
     }
-
-    async fn request_empty(&self, builder: reqwest::RequestBuilder) -> Result<()> {
-        let response = builder
-            .send()
-            .await
-            .context("sending control plane request")?;
-        let status = response.status();
-        let text = response
-            .text()
-            .await
-            .context("reading control plane response")?;
-        if !status.is_success() {
-            bail!("control plane request failed with {status}: {text}");
-        }
-        Ok(())
-    }
-
     fn url(&self, path: &str) -> String {
         format!("{}{}", self.config.server.trim_end_matches('/'), path)
     }

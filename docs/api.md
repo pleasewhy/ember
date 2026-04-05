@@ -276,20 +276,20 @@ CLI 当前使用：
 
 - `Authorization: Bearer <token>`
 
-登录不是用户名密码交换，而是“保存一个已签发的 API token”，并用 `GET /v1/whoami` 验证该 token 是否可用。
+CLI 不再做单独的 login 交换；直接接收一个已签发的 API token，并用 `GET /v1/whoami` 验证该 token 是否可用。
 
 ### 2.2 基础 URL
 
-CLI 会把 `--server` 与固定路径拼接。例如：
+CLI 当前固定访问：
 
 ```text
-https://your-platform.example.com + /v1/apps
+https://embercloud.transairobot.com/api
 ```
 
-也就是说，如果你把 API 挂在 `/api` 下，应传入：
+例如应用列表接口是：
 
 ```text
-https://your-platform.example.com/api
+https://embercloud.transairobot.com/api/v1/apps
 ```
 
 ### 2.3 身份接口
@@ -298,7 +298,7 @@ https://your-platform.example.com/api
 
 用途：
 
-- 登录时验证 token
+- 校验传入的 token
 - `ember whoami`
 
 CLI 会读取响应中的：
@@ -306,14 +306,6 @@ CLI 会读取响应中的：
 - `data.sub`
 - `data.aud`
 - `data.display_name`
-
-#### `POST /v1/logout`
-
-用途：
-
-- `ember logout`
-
-CLI 不要求响应体格式，只要求返回成功状态码。
 
 ### 2.4 应用与版本接口
 

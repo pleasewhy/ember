@@ -23,6 +23,8 @@ use tracing_subscriber::EnvFilter;
 #[derive(Debug, Parser)]
 #[command(name = "ember", version, about = "Ember worker CLI")]
 struct Cli {
+    #[arg(long, global = true, value_name = "TOKEN", help = "API token for embercloud; also supports EMBER_TOKEN, EMBERCLOUD_TOKEN, or WKR_API_TOKEN")]
+    token: Option<String>,
     #[command(subcommand)]
     command: Commands,
 }
@@ -34,14 +36,7 @@ enum Commands {
         #[arg(long)]
         force: bool,
     },
-    Login {
-        #[arg(long)]
-        server: String,
-        #[arg(long)]
-        token: String,
-    },
     Whoami,
-    Logout,
     Build {
         #[arg(long)]
         manifest: Option<PathBuf>,
@@ -156,12 +151,10 @@ async fn main() -> Result<()> {
         .without_time()
         .init();
 
-    let cli = Cli::parse();
-    match cli.command {
+    let Cli { token, command } = Cli::parse();
+    match command {
         Commands::Init { path, force } => init_project(&path, force),
-        Commands::Login { server, token } => login(server, token).await,
-        Commands::Whoami => whoami().await,
-        Commands::Logout => logout().await,
+        Commands::Whoami => whoami(token).await,
         Commands::Build { manifest, release } => {
             let loaded = load_manifest(manifest)?;
             build_project(&loaded, release).await
@@ -179,21 +172,21 @@ async fn main() -> Result<()> {
         }
         Commands::Publish { manifest } => {
             let loaded = load_manifest(manifest)?;
-            publish(&loaded).await
+            publish(&loaded, token).await
         }
-        Commands::Deploy { app, version } => deploy(&app, &version).await,
-        Commands::Status { app } => status(&app).await,
-        Commands::Apps => list_apps().await,
-        Commands::Nodes => list_nodes().await,
-        Commands::Deployments { app, limit } => deployments(&app, limit).await,
-        Commands::Events { app, limit } => events(&app, limit).await,
-        Commands::Env { command } => env_command(command).await,
-        Commands::Secrets { command } => secret_command(command).await,
-        Commands::Logs { app, limit } => logs(&app, limit).await,
-        Commands::Rollback { app, version } => rollback(&app, &version).await,
-        Commands::DeleteVersion { app, version } => delete_version(&app, &version).await,
-        Commands::DeleteApp { app } => delete_app(&app).await,
-        Commands::Sqlite { command } => sqlite_command(command).await,
+        Commands::Deploy { app, version } => deploy(&app, &version, token).await,
+        Commands::Status { app } => status(&app, token).await,
+        Commands::Apps => list_apps(token).await,
+        Commands::Nodes => list_nodes(token).await,
+        Commands::Deployments { app, limit } => deployments(&app, limit, token).await,
+        Commands::Events { app, limit } => events(&app, limit, token).await,
+        Commands::Env { command } => env_command(command, token).await,
+        Commands::Secrets { command } => secret_command(command, token).await,
+        Commands::Logs { app, limit } => logs(&app, limit, token).await,
+        Commands::Rollback { app, version } => rollback(&app, &version, token).await,
+        Commands::DeleteVersion { app, version } => delete_version(&app, &version, token).await,
+        Commands::DeleteApp { app } => delete_app(&app, token).await,
+        Commands::Sqlite { command } => sqlite_command(command, token).await,
     }
 }
 
@@ -256,28 +249,10 @@ fn init_project(path: &Path, force: bool) -> Result<()> {
     Ok(())
 }
 
-async fn login(server: String, token: String) -> Result<()> {
-    let config = api::ApiClient::token_login(server, token).await?;
-    config.save()?;
-    info!(
-        user_sub = config.user_sub.as_deref().unwrap_or("unknown"),
-        "saved CLI credentials"
-    );
-    Ok(())
-}
-
-async fn whoami() -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn whoami(token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.whoami().await?;
     print_json(&response)
-}
-
-async fn logout() -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
-    let _ = client.logout().await;
-    config::CliConfig::delete()?;
-    info!("cleared CLI credentials");
-    Ok(())
 }
 
 fn load_manifest(path: Option<PathBuf>) -> Result<LoadedManifest> {
@@ -375,8 +350,8 @@ async fn ensure_rust_target(target: &str) -> Result<()> {
     Ok(())
 }
 
-async fn publish(loaded: &LoadedManifest) -> Result<()> {
-    let config = config::CliConfig::load()?;
+async fn publish(loaded: &LoadedManifest, token: Option<String>) -> Result<()> {
+    let config = config::CliConfig::resolve(token)?;
     let client = api::ApiClient::new(config);
     let artifact_path = loaded.component_path();
     if !artifact_path.exists() {
@@ -397,44 +372,44 @@ async fn publish(loaded: &LoadedManifest) -> Result<()> {
     print_json(&response)
 }
 
-async fn deploy(app: &str, version: &str) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn deploy(app: &str, version: &str, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.deploy(app, version).await?;
     print_json(&response)
 }
 
-async fn status(app: &str) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn status(app: &str, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.status(app).await?;
     print_json(&response)
 }
 
-async fn list_apps() -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn list_apps(token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.apps().await?;
     print_json(&response)
 }
 
-async fn list_nodes() -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn list_nodes(token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.nodes().await?;
     print_json(&response)
 }
 
-async fn deployments(app: &str, limit: u32) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn deployments(app: &str, limit: u32, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.deployments(app, limit).await?;
     print_json(&response)
 }
 
-async fn events(app: &str, limit: u32) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn events(app: &str, limit: u32, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.events(app, limit).await?;
     print_json(&response)
 }
 
-async fn env_command(command: EnvCommands) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn env_command(command: EnvCommands, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = match command {
         EnvCommands::List { app } => client.env_list(&app).await?,
         EnvCommands::Set { app, name, value } => client.env_set(&app, &name, &value).await?,
@@ -443,8 +418,8 @@ async fn env_command(command: EnvCommands) -> Result<()> {
     print_json(&response)
 }
 
-async fn secret_command(command: SecretCommands) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn secret_command(command: SecretCommands, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = match command {
         SecretCommands::List { app } => client.secrets_list(&app).await?,
         SecretCommands::Set { app, name, value } => client.secrets_set(&app, &name, &value).await?,
@@ -453,32 +428,32 @@ async fn secret_command(command: SecretCommands) -> Result<()> {
     print_json(&response)
 }
 
-async fn logs(app: &str, limit: u32) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn logs(app: &str, limit: u32, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.logs(app, limit).await?;
     print_json(&response)
 }
 
-async fn rollback(app: &str, version: &str) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn rollback(app: &str, version: &str, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.rollback(app, version).await?;
     print_json(&response)
 }
 
-async fn delete_version(app: &str, version: &str) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn delete_version(app: &str, version: &str, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.delete_version(app, version).await?;
     print_json(&response)
 }
 
-async fn delete_app(app: &str) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn delete_app(app: &str, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.delete_app(app).await?;
     print_json(&response)
 }
 
-async fn sqlite_command(command: SqliteCommands) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::load()?);
+async fn sqlite_command(command: SqliteCommands, token: Option<String>) -> Result<()> {
+    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     match command {
         SqliteCommands::Backup { app, out } => {
             let bytes = client.sqlite_backup(&app).await?;

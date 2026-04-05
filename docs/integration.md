@@ -194,13 +194,12 @@ mode = "deny_all"
 
 ### 3.6 发布到兼容控制面
 
-`ember` 仓库不带公开控制面，但 `ember-cli` 可以调用兼容 API 的外部平台：
+`ember` 仓库不带公开控制面，但 `ember-cli` 当前默认会调用托管的 `embercloud` 控制面：
 
 ```bash
-ember login --server https://your-platform.example.com --token <api-token>
-ember publish
-ember deploy hello-worker <version>
-ember status hello-worker
+ember --token <api-token> publish
+ember --token <api-token> deploy hello-worker <version>
+ember --token <api-token> status hello-worker
 ```
 
 如果平台支持这些接口，你还可以使用：
