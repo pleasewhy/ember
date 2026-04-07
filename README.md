@@ -61,6 +61,7 @@ cargo check --manifest-path examples/pocket-tasks-worker/Cargo.toml
 - [Integration Guide](./docs/integration.md)
 - [API Reference](./docs/api.md)
 - [CLI Guide](./docs/cli.md)
+- [worker.toml Guide](./docs/worker-toml.md)
 
 ## What Each Crate Does
 

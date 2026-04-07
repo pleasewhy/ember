@@ -18,9 +18,10 @@ description: Use for Ember worker development and integration with ember-cli, em
 1. 先读 `references/integration.md`，确认完整接入路径。
 2. 如果当前任务偏命令行操作、发布部署或平台配置，继续读 `references/cli.md`。
 3. 如果当前任务偏 API 面、manifest、runtime、host 集成或兼容控制面设计，继续读 `references/api.md`。
-4. 如果需要仓库总览或公开边界，读 `references/readme.md`。
-5. 如果需要最小代码模板，读 `references/hello-worker.rs`；如果要接 SQLite，读 `references/sqlite-worker.rs`。
-6. 不要猜测 `worker.toml` 字段、CLI 命令名、兼容控制面接口或 SDK API；以引用文档为准。
+4. 如果当前任务专门涉及 `worker.toml` 字段、默认值、校验规则或示例配置，读 `references/worker-toml.md`。
+5. 如果需要仓库总览或公开边界，读 `references/readme.md`。
+6. 如果需要最小代码模板，读 `references/hello-worker.rs`；如果要接 SQLite，读 `references/sqlite-worker.rs`。
+7. 不要猜测 `worker.toml` 字段、CLI 命令名、兼容控制面接口或 SDK API；以引用文档为准。
 
 ## 接入规则
 
@@ -49,6 +50,7 @@ description: Use for Ember worker development and integration with ember-cli, em
 
 - 完整接入流程：`references/integration.md`
 - API 说明：`references/api.md`
+- `worker.toml` 说明：`references/worker-toml.md`
 - CLI 说明：`references/cli.md`
 - 仓库总览：`references/readme.md`
 - 最小 HTTP 示例：`references/hello-worker.rs`

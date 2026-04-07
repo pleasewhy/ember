@@ -25,3 +25,4 @@ is separated from the first platform host crate, but the host integration model 
 - `docs/integration.md`
 - `docs/api.md`
 - `docs/cli.md`
+- `docs/worker-toml.md`

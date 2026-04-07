@@ -42,6 +42,9 @@
 - `[resources].memory_limit_bytes`
 - `[network].mode`
 - `[network].allow`
+- `[embercloud].app`
+
+完整字段说明、默认值、校验规则和示例配置见 `worker-toml.md`。
 
 ### 1.2 `ember-sdk`
 

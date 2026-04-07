@@ -1,6 +1,9 @@
-name = "test"
+name = "hello-world"
 component = "target/wasm32-wasip2/release/hello_world_test.wasm"
 base_path = "/"
+
+[embercloud]
+app = "hello-world"
 
 [env]
 

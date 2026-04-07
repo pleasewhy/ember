@@ -4,16 +4,26 @@
 //! - `http`: lightweight routing, middleware, and response helpers
 //! - `sqlite`: guest wrappers around the shared host ABI
 
+/// SQLite bindings and migration helpers exposed to guest workers.
+///
+/// These APIs forward to the host ABI generated from WIT and are intended for
+/// the default SQLite database mounted for the current worker instance.
 pub mod sqlite {
     wit_bindgen::generate!({
         path: "../ember-host-abi/wit",
         world: "imports",
     });
 
+    /// Re-exported low-level SQLite result and statement types generated from
+    /// the host ABI.
     pub use wkr::platform::sqlite::{
         QueryResult, Row, SqliteValue, Statement, TypedQueryResult, TypedRow,
     };
 
+    /// Executes a single SQL statement and returns the number of affected rows.
+    ///
+    /// `params` are converted to owned strings before crossing the guest/host
+    /// ABI boundary.
     pub fn execute(sql: &str, params: &[impl AsRef<str>]) -> Result<u64, String> {
         let params = params
             .iter()
@@ -22,6 +32,10 @@ pub mod sqlite {
         wkr::platform::sqlite::execute(sql, &params)
     }
 
+    /// Executes a query and returns rows in the untyped host ABI format.
+    ///
+    /// Use this when you need direct access to raw SQLite values returned by
+    /// the runtime.
     pub fn query(sql: &str, params: &[impl AsRef<str>]) -> Result<QueryResult, String> {
         let params = params
             .iter()
@@ -30,14 +44,26 @@ pub mod sqlite {
         wkr::platform::sqlite::query(sql, &params)
     }
 
+    /// Executes a batch of SQL statements separated by semicolons.
+    ///
+    /// This is useful for schema setup or other multi-statement initialization
+    /// that does not need per-statement parameter binding.
     pub fn execute_batch(sql: &str) -> Result<u64, String> {
         wkr::platform::sqlite::execute_batch(sql)
     }
 
+    /// Executes multiple prepared statements inside a single transaction.
+    ///
+    /// The host guarantees that either all statements are committed or the
+    /// whole transaction is rolled back.
     pub fn transaction(statements: &[Statement]) -> Result<u64, String> {
         wkr::platform::sqlite::transaction(statements)
     }
 
+    /// Executes a query and returns rows in the typed host ABI format.
+    ///
+    /// This is a better fit than [`query`] when you want explicit SQLite type
+    /// information for each returned column.
     pub fn query_typed(sql: &str, params: &[impl AsRef<str>]) -> Result<TypedQueryResult, String> {
         let params = params
             .iter()
@@ -46,14 +72,26 @@ pub mod sqlite {
         wkr::platform::sqlite::query_typed(sql, &params)
     }
 
+    /// Helpers for idempotent schema migrations stored in SQLite itself.
     pub mod migrations {
         use super::{Statement, execute_batch, query, transaction};
 
+        /// Describes a single schema migration.
+        ///
+        /// Migrations are tracked by `id` inside the `_ember_migrations` table
+        /// and executed in the order they are provided to [`apply`].
         pub struct Migration {
+            /// Stable unique identifier for the migration.
             pub id: &'static str,
+            /// SQL to execute when the migration has not been applied yet.
             pub sql: &'static str,
         }
 
+        /// Applies any migrations whose `id` has not been recorded yet.
+        ///
+        /// The function creates `_ember_migrations` if needed, runs pending
+        /// migrations in a single transaction, and returns the list of IDs that
+        /// were applied during this call.
         pub fn apply(migrations: &[Migration]) -> Result<Vec<String>, String> {
             execute_batch(
                 "create table if not exists _ember_migrations (
@@ -94,6 +132,13 @@ pub mod sqlite {
     }
 }
 
+/// Lightweight HTTP routing, middleware, and response helpers for guest
+/// workers.
+///
+/// The module is intentionally small: a [`crate::http::Router`] stores route
+/// handlers, [`crate::http::Context`] exposes the current request plus path
+/// parameters, and middleware can wrap handlers through
+/// [`crate::http::Middleware`] and [`crate::http::Next`].
 pub mod http {
     use std::collections::{BTreeMap, HashMap};
     use std::future::Future;
@@ -109,9 +154,16 @@ pub mod http {
     use matchit::Router as PathRouter;
     use wstd::http::{Body, Method, Request, Response, StatusCode};
 
+    /// Boxed future used internally to erase handler and middleware future
+    /// types.
     type BoxFuture<T> = Pin<Box<dyn Future<Output = T> + 'static>>;
+    /// Boxed request handler used by the router dispatch path.
     type BoxHandler = Arc<dyn Fn(Context) -> BoxFuture<Response<Body>> + 'static>;
 
+    /// Handle to the remaining middleware chain plus the final route handler.
+    ///
+    /// Middleware receives a [`Next`] and can decide whether to call
+    /// [`Next::run`] to continue the chain.
     #[derive(Clone)]
     pub struct Next {
         middlewares: Arc<Vec<Middleware>>,
@@ -120,6 +172,7 @@ pub mod http {
     }
 
     impl Next {
+        /// Runs the next middleware in the chain or the final route handler.
         pub async fn run(self, context: Context) -> Response<Body> {
             if let Some(middleware) = self.middlewares.get(self.index) {
                 let next = Self {
@@ -134,15 +187,20 @@ pub mod http {
         }
     }
 
+    /// Reusable middleware wrapper constructed by [`middleware()`].
     #[derive(Clone)]
     pub struct Middleware(Arc<dyn Fn(Context, Next) -> BoxFuture<Response<Body>> + 'static>);
 
     impl Middleware {
+        /// Executes the middleware for the provided request context.
         pub async fn run(&self, context: Context, next: Next) -> Response<Body> {
             (self.0)(context, next).await
         }
     }
 
+    /// Wraps an async function into a [`Middleware`] value.
+    ///
+    /// This is the main entry point for building custom middleware layers.
     pub fn middleware<F, Fut>(func: F) -> Middleware
     where
         F: Fn(Context, Next) -> Fut + 'static,
@@ -151,44 +209,61 @@ pub mod http {
         Middleware(Arc::new(move |context, next| Box::pin(func(context, next))))
     }
 
+    /// Request context passed to middleware and route handlers.
+    ///
+    /// It contains the mutable request plus any path parameters extracted by
+    /// the router.
     pub struct Context {
         request: Request<Body>,
         params: BTreeMap<String, String>,
     }
 
     impl Context {
+        /// Creates a new context from the incoming request and matched params.
         fn new(request: Request<Body>, params: BTreeMap<String, String>) -> Self {
             Self { request, params }
         }
 
+        /// Returns the HTTP method of the current request.
         pub fn method(&self) -> &Method {
             self.request.method()
         }
 
+        /// Returns the normalized request path.
         pub fn path(&self) -> &str {
             self.request.uri().path()
         }
 
+        /// Returns an immutable reference to the underlying request.
         pub fn request(&self) -> &Request<Body> {
             &self.request
         }
 
+        /// Returns a mutable reference to the underlying request.
+        ///
+        /// Middleware can use this to attach data in extensions or to mutate
+        /// headers before the handler runs.
         pub fn request_mut(&mut self) -> &mut Request<Body> {
             &mut self.request
         }
 
+        /// Consumes the context and returns the owned request.
         pub fn into_request(self) -> Request<Body> {
             self.request
         }
 
+        /// Returns the value of a named path parameter if one was matched.
         pub fn param(&self, name: &str) -> Option<&str> {
             self.params.get(name).map(String::as_str)
         }
 
+        /// Returns all matched path parameters.
         pub fn params(&self) -> &BTreeMap<String, String> {
             &self.params
         }
 
+        /// Returns the request identifier inserted by
+        /// [`middleware::request_id`], if present.
         pub fn request_id(&self) -> Option<&str> {
             self.request
                 .extensions()
@@ -197,11 +272,16 @@ pub mod http {
         }
     }
 
+    /// Internal route entry storing a resolved handler.
     #[derive(Clone)]
     struct Route {
         handler: BoxHandler,
     }
 
+    /// In-memory HTTP router for guest worker request handling.
+    ///
+    /// Routes are matched by HTTP method and path. Path segments may use
+    /// `:name` syntax for named captures and `*rest` syntax for wildcards.
     #[derive(Default)]
     pub struct Router {
         routes: Vec<Route>,
@@ -210,15 +290,23 @@ pub mod http {
     }
 
     impl Router {
+        /// Creates an empty router.
         pub fn new() -> Self {
             Self::default()
         }
 
+        /// Appends a middleware to the router-wide middleware chain.
+        ///
+        /// Middleware runs in registration order for every matched request.
         pub fn use_middleware(&mut self, middleware: Middleware) -> &mut Self {
             self.middlewares.push(middleware);
             self
         }
 
+        /// Registers a route handler for the given method and path pattern.
+        ///
+        /// Returns an error when the pattern cannot be inserted into the
+        /// internal matcher.
         pub fn route<F, Fut>(
             &mut self,
             method: Method,
@@ -243,6 +331,7 @@ pub mod http {
             Ok(self)
         }
 
+        /// Registers a `GET` handler.
         pub fn get<F, Fut>(&mut self, path: &str, handler: F) -> Result<&mut Self, String>
         where
             F: Fn(Context) -> Fut + 'static,
@@ -251,6 +340,7 @@ pub mod http {
             self.route(Method::GET, path, handler)
         }
 
+        /// Registers a `POST` handler.
         pub fn post<F, Fut>(&mut self, path: &str, handler: F) -> Result<&mut Self, String>
         where
             F: Fn(Context) -> Fut + 'static,
@@ -259,6 +349,7 @@ pub mod http {
             self.route(Method::POST, path, handler)
         }
 
+        /// Registers a `PUT` handler.
         pub fn put<F, Fut>(&mut self, path: &str, handler: F) -> Result<&mut Self, String>
         where
             F: Fn(Context) -> Fut + 'static,
@@ -267,6 +358,7 @@ pub mod http {
             self.route(Method::PUT, path, handler)
         }
 
+        /// Registers a `PATCH` handler.
         pub fn patch<F, Fut>(&mut self, path: &str, handler: F) -> Result<&mut Self, String>
         where
             F: Fn(Context) -> Fut + 'static,
@@ -275,6 +367,7 @@ pub mod http {
             self.route(Method::PATCH, path, handler)
         }
 
+        /// Registers a `DELETE` handler.
         pub fn delete<F, Fut>(&mut self, path: &str, handler: F) -> Result<&mut Self, String>
         where
             F: Fn(Context) -> Fut + 'static,
@@ -283,6 +376,7 @@ pub mod http {
             self.route(Method::DELETE, path, handler)
         }
 
+        /// Registers an `OPTIONS` handler.
         pub fn options<F, Fut>(&mut self, path: &str, handler: F) -> Result<&mut Self, String>
         where
             F: Fn(Context) -> Fut + 'static,
@@ -291,6 +385,10 @@ pub mod http {
             self.route(Method::OPTIONS, path, handler)
         }
 
+        /// Dispatches a request through route matching and middleware.
+        ///
+        /// Requests that match the path but not the method receive `405 Method
+        /// Not Allowed`; unmatched paths receive `404 Not Found`.
         pub async fn handle(&self, request: Request<Body>) -> Response<Body> {
             let method = request.method().as_str().to_owned();
             let path = request.uri().path().to_owned();
@@ -310,6 +408,7 @@ pub mod http {
             next.run(Context::new(request, params)).await
         }
 
+        /// Resolves a handler and path params for a method/path pair.
         fn resolve(
             &self,
             method: &str,
@@ -326,6 +425,7 @@ pub mod http {
             Some((route.handler.clone(), params))
         }
 
+        /// Returns `true` when any registered method matches the supplied path.
         fn matches_any_method(&self, path: &str) -> bool {
             self.by_method
                 .values()
@@ -333,6 +433,7 @@ pub mod http {
         }
     }
 
+    /// Built-in middleware helpers.
     pub mod middleware {
         use super::{
             ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS,
@@ -340,6 +441,11 @@ pub mod http {
             Next, RequestId, StatusCode, empty_response, middleware,
         };
 
+        /// Adds a generated request ID to the request extensions and response
+        /// headers.
+        ///
+        /// The ID is exposed to handlers through [`Context::request_id`] and is
+        /// returned to clients as `x-request-id`.
         pub fn request_id() -> Middleware {
             middleware(|mut context: Context, next: Next| async move {
                 let request_id = RequestId::new();
@@ -357,6 +463,10 @@ pub mod http {
             })
         }
 
+        /// Logs one line per request to standard output.
+        ///
+        /// The log includes method, path, status, duration, and request ID when
+        /// available.
         pub fn logger() -> Middleware {
             middleware(|context: Context, next: Next| async move {
                 let method = context.method().as_str().to_owned();
@@ -376,6 +486,8 @@ pub mod http {
             })
         }
 
+        /// Applies permissive CORS headers and short-circuits `OPTIONS`
+        /// preflight requests.
         pub fn cors() -> Middleware {
             middleware(|context: Context, next: Next| async move {
                 if context.method() == Method::OPTIONS {
@@ -389,6 +501,7 @@ pub mod http {
             })
         }
 
+        /// Inserts the default CORS response headers used by [`cors`].
         fn apply_cors_headers(response: &mut wstd::http::Response<wstd::http::Body>) {
             response
                 .headers_mut()
@@ -404,10 +517,13 @@ pub mod http {
         }
     }
 
+    /// Internal request identifier stored in request extensions.
     #[derive(Clone)]
     struct RequestId(String);
 
     impl RequestId {
+        /// Generates a best-effort unique request identifier for the current
+        /// process.
         fn new() -> Self {
             static COUNTER: AtomicU64 = AtomicU64::new(1);
             let now_ms = SystemTime::now()
@@ -419,14 +535,20 @@ pub mod http {
         }
     }
 
+    /// Builds the default `404 Not Found` response.
     fn not_found() -> Response<Body> {
         text_response(StatusCode::NOT_FOUND, "route not found\n")
     }
 
+    /// Builds the default `405 Method Not Allowed` response.
     fn method_not_allowed() -> Response<Body> {
         text_response(StatusCode::METHOD_NOT_ALLOWED, "method not allowed\n")
     }
 
+    /// Normalizes Ember route syntax to the pattern format expected by
+    /// `matchit`.
+    ///
+    /// `:name` is converted to `{name}` and `*rest` is converted to `{*rest}`.
     fn normalize_route_pattern(path: &str) -> String {
         let mut normalized = String::with_capacity(path.len());
         for segment in path.split('/') {
@@ -451,10 +573,12 @@ pub mod http {
         normalized
     }
 
+    /// Wraps a fixed response builder into a boxed handler.
     fn fallback_handler(response: fn() -> Response<Body>) -> BoxHandler {
         Arc::new(move |_| Box::pin(async move { response() }))
     }
 
+    /// Creates a plain-text response with the given HTTP status.
     pub fn text_response(status: StatusCode, body: impl Into<String>) -> Response<Body> {
         Response::builder()
             .status(status)
@@ -462,6 +586,7 @@ pub mod http {
             .expect("response build")
     }
 
+    /// Creates an empty response with the given HTTP status.
     pub fn empty_response(status: StatusCode) -> Response<Body> {
         Response::builder()
             .status(status)

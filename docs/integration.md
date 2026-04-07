@@ -181,6 +181,8 @@ memory_limit_bytes = 134217728
 mode = "deny_all"
 ```
 
+完整字段说明、默认值、校验规则和更多示例见 [worker.toml 文档](./worker-toml.md)。
+
 这些字段控制：
 
 - worker 名称

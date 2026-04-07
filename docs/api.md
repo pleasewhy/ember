@@ -45,51 +45,7 @@
 
 #### `worker.toml` 字段
 
-最常见结构：
-
-```toml
-name = "hello-worker"
-component = "target/wasm32-wasip2/release/hello_worker.wasm"
-base_path = "/"
-
-[env]
-
-[secrets]
-
-[sqlite]
-enabled = true
-
-[resources]
-cpu_time_limit_ms = 5000
-memory_limit_bytes = 134217728
-
-[network]
-mode = "deny_all"
-allow = []
-```
-
-字段说明：
-
-- `name`
-  worker 名称，只允许字母、数字、`-`、`_`
-- `component`
-  Wasm 产物的相对路径
-- `base_path`
-  运行时会先按这里重写请求路径，必须以 `/` 开头
-- `[env]`
-  注入给 guest 的普通环境变量
-- `[secrets]`
-  secret 映射。Ember 本身不实现 secret 存储，具体解析由外部平台决定
-- `[sqlite].enabled`
-  是否开启 SQLite host import
-- `[resources].cpu_time_limit_ms`
-  CPU 时间上限，运行时通过 epoch interruption 执行限制
-- `[resources].memory_limit_bytes`
-  内存上限
-- `[network].mode`
-  出站网络策略，可选 `deny_all`、`allow_list`、`allow_all`
-- `[network].allow`
-  仅在 `allow_list` 模式下生效，支持 `host`、`host:port`、`.suffix`、`[ipv6]:port`
+`worker.toml` 的完整字段说明、默认值、校验规则和示例配置见 [worker.toml 文档](./worker-toml.md)。
 
 ### 1.2 `ember-sdk`
 

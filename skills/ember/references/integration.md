@@ -147,6 +147,8 @@ memory_limit_bytes = 134217728
 mode = "deny_all"
 ```
 
+完整字段说明、默认值、校验规则和更多示例见 `worker-toml.md`。
+
 ### 3.6 发布到兼容控制面
 
 `ember` 仓库不带公开控制面，但 `ember-cli` 可以调用兼容 API 的外部平台：
