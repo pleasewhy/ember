@@ -198,21 +198,21 @@ mode = "deny_all"
 
 ```bash
 ember login
-ember publish
-ember deploy hello-worker <version>
-ember status hello-worker
+ember app publish
+ember app deploy hello-worker <version>
+ember app status hello-worker
 ```
 
 这里的 `ember login` 会打开浏览器，走 embercloud 登录页，并通过本地 localhost 回调保存 CLI token。
 
 如果平台支持这些接口，你还可以使用：
 
-- `ember logs`
-- `ember env`
-- `ember secrets`
-- `ember rollback`
-- `ember sqlite backup`
-- `ember sqlite restore`
+- `ember app logs`
+- `ember app env`
+- `ember app secrets`
+- `ember app rollback`
+- `ember app sqlite backup`
+- `ember app sqlite restore`
 
 控制面兼容接口约定见 [API 文档](./api.md)。
 

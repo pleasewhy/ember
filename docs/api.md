@@ -313,7 +313,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember publish`
+- `ember app publish`
 
 请求格式：
 
@@ -334,7 +334,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember deploy <app> <version>`
+- `ember app deploy <app> <version>`
 
 请求 JSON：
 
@@ -346,7 +346,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember rollback <app> <version>`
+- `ember app rollback <app> <version>`
 
 请求 JSON：
 
@@ -358,13 +358,13 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember delete-version <app> <version>`
+- `ember app delete-version <app> <version>`
 
 #### `DELETE /v1/apps/{app}`
 
 用途：
 
-- `ember delete-app <app>`
+- `ember app delete <app>`
 
 ### 2.5 查询接口
 
@@ -372,7 +372,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember apps`
+- `ember app list`
 
 返回的每个 app 条目会包含：
 
@@ -388,7 +388,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember status <app>`
+- `ember app status <app>`
 
 返回里会包含：
 
@@ -396,29 +396,23 @@ CLI 会读取响应中的：
 - `access_host`
 - `access_url`
 
-#### `GET /v1/nodes`
-
-用途：
-
-- `ember nodes`
-
 #### `GET /v1/apps/{app}/deployments/history?limit={n}`
 
 用途：
 
-- `ember deployments <app> --limit <n>`
+- `ember app deployments <app> --limit <n>`
 
 #### `GET /v1/apps/{app}/events?limit={n}`
 
 用途：
 
-- `ember events <app> --limit <n>`
+- `ember app events <app> --limit <n>`
 
 #### `GET /v1/apps/{app}/logs?limit={n}`
 
 用途：
 
-- `ember logs <app> --limit <n>`
+- `ember app logs <app> --limit <n>`
 
 ### 2.6 环境变量接口
 
@@ -426,13 +420,13 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember env list <app>`
+- `ember app env list <app>`
 
 #### `POST /v1/apps/{app}/env`
 
 用途：
 
-- `ember env set <app> <name> <value>`
+- `ember app env set <app> <name> <value>`
 
 请求 JSON：
 
@@ -444,7 +438,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember env delete <app> <name>`
+- `ember app env delete <app> <name>`
 
 ### 2.7 Secret 接口
 
@@ -452,13 +446,13 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember secrets list <app>`
+- `ember app secrets list <app>`
 
 #### `POST /v1/apps/{app}/secrets`
 
 用途：
 
-- `ember secrets set <app> <name> <value>`
+- `ember app secrets set <app> <name> <value>`
 
 请求 JSON：
 
@@ -470,7 +464,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember secrets delete <app> <name>`
+- `ember app secrets delete <app> <name>`
 
 ### 2.8 SQLite 备份与恢复接口
 
@@ -478,7 +472,7 @@ CLI 会读取响应中的：
 
 用途：
 
-- `ember sqlite backup <app> <out>`
+- `ember app sqlite backup <app> <out>`
 
 CLI 期望响应 JSON 中存在：
 
@@ -492,7 +486,7 @@ CLI 期望响应 JSON 中存在：
 
 用途：
 
-- `ember sqlite restore <app> <input>`
+- `ember app sqlite restore <app> <input>`
 
 请求 JSON：
 
@@ -513,7 +507,7 @@ CLI 当前对响应的处理相对宽松：
 
 ## 3. 组件签名约定
 
-`ember publish` 支持对组件签名。
+`ember app publish` 支持对组件签名。
 
 环境变量：
 

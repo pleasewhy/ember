@@ -153,9 +153,9 @@ mode = "deny_all"
 
 ```bash
 ember login
-ember publish
-ember deploy hello-worker <version>
-ember status hello-worker
+ember app publish
+ember app deploy hello-worker <version>
+ember app status hello-worker
 ```
 
 这里的 `ember login` 默认会打开浏览器，走 embercloud 的 OAuth 登录页，并通过本地 localhost 回调把 CLI token 保存到当前用户配置目录。

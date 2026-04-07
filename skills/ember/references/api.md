@@ -175,7 +175,6 @@ CLI 当前要求 Bearer Token 鉴权，并使用这些接口：
 
 - `GET /v1/apps`
 - `GET /v1/apps/{app}`
-- `GET /v1/nodes`
 - `GET /v1/apps/{app}/deployments/history?limit={n}`
 - `GET /v1/apps/{app}/events?limit={n}`
 - `GET /v1/apps/{app}/logs?limit={n}`
@@ -204,7 +203,7 @@ CLI 当前要求 Bearer Token 鉴权，并使用这些接口：
 
 ## 3. 组件签名约定
 
-`ember publish` 支持这些环境变量：
+`ember app publish` 支持这些环境变量：
 
 - `EMBER_SIGNING_KEY_ID`
 - `EMBER_SIGNING_KEY_BASE64`

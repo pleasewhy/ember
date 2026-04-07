@@ -56,11 +56,6 @@ enum Commands {
         #[arg(long, default_value_t = true)]
         release: bool,
     },
-    CreateApp {
-        app: Option<String>,
-        #[arg(long)]
-        manifest: Option<PathBuf>,
-    },
     Dev {
         #[arg(long)]
         manifest: Option<PathBuf>,
@@ -68,6 +63,20 @@ enum Commands {
         addr: SocketAddr,
         #[arg(long)]
         skip_build: bool,
+    },
+    App {
+        #[command(subcommand)]
+        command: AppCommands,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum AppCommands {
+    List,
+    Create {
+        app: Option<String>,
+        #[arg(long)]
+        manifest: Option<PathBuf>,
     },
     Publish {
         #[arg(long)]
@@ -84,8 +93,6 @@ enum Commands {
     Status {
         app: String,
     },
-    Apps,
-    Nodes,
     Deployments {
         app: String,
         #[arg(long, default_value_t = 100)]
@@ -95,14 +102,6 @@ enum Commands {
         app: String,
         #[arg(long, default_value_t = 100)]
         limit: u32,
-    },
-    Env {
-        #[command(subcommand)]
-        command: EnvCommands,
-    },
-    Secrets {
-        #[command(subcommand)]
-        command: SecretCommands,
     },
     Logs {
         app: String,
@@ -117,17 +116,25 @@ enum Commands {
         app: String,
         version: String,
     },
-    DeleteApp {
+    Delete {
         app: String,
+    },
+    Env {
+        #[command(subcommand)]
+        command: AppEnvCommands,
+    },
+    Secrets {
+        #[command(subcommand)]
+        command: AppSecretCommands,
     },
     Sqlite {
         #[command(subcommand)]
-        command: SqliteCommands,
+        command: AppSqliteCommands,
     },
 }
 
 #[derive(Debug, Subcommand)]
-enum EnvCommands {
+enum AppEnvCommands {
     List {
         app: String,
     },
@@ -143,7 +150,7 @@ enum EnvCommands {
 }
 
 #[derive(Debug, Subcommand)]
-enum SecretCommands {
+enum AppSecretCommands {
     List {
         app: String,
     },
@@ -159,7 +166,7 @@ enum SecretCommands {
 }
 
 #[derive(Debug, Subcommand)]
-enum SqliteCommands {
+enum AppSqliteCommands {
     Backup { app: String, out: PathBuf },
     Restore { app: String, input: PathBuf },
 }
@@ -183,7 +190,6 @@ async fn main() -> Result<()> {
             let loaded = load_manifest(manifest)?;
             build_project(&loaded, release).await
         }
-        Commands::CreateApp { app, manifest } => create_app_command(app, manifest, token).await,
         Commands::Dev {
             manifest,
             addr,
@@ -195,11 +201,19 @@ async fn main() -> Result<()> {
             }
             ember_runtime::serve(loaded, DevServerConfig { listen_addr: addr }).await
         }
-        Commands::Publish { manifest } => {
+        Commands::App { command } => app_command(command, token).await,
+    }
+}
+
+async fn app_command(command: AppCommands, token: Option<String>) -> Result<()> {
+    match command {
+        AppCommands::List => list_apps(token).await,
+        AppCommands::Create { app, manifest } => create_app_command(app, manifest, token).await,
+        AppCommands::Publish { manifest } => {
             let loaded = load_manifest(manifest)?;
             publish(&loaded, token).await
         }
-        Commands::Deploy {
+        AppCommands::Deploy {
             app,
             manifest,
             args,
@@ -207,18 +221,16 @@ async fn main() -> Result<()> {
             let (app, version) = parse_deploy_args(app, args)?;
             deploy(app, manifest, &version, token).await
         }
-        Commands::Status { app } => status(&app, token).await,
-        Commands::Apps => list_apps(token).await,
-        Commands::Nodes => list_nodes(token).await,
-        Commands::Deployments { app, limit } => deployments(&app, limit, token).await,
-        Commands::Events { app, limit } => events(&app, limit, token).await,
-        Commands::Env { command } => env_command(command, token).await,
-        Commands::Secrets { command } => secret_command(command, token).await,
-        Commands::Logs { app, limit } => logs(&app, limit, token).await,
-        Commands::Rollback { app, version } => rollback(&app, &version, token).await,
-        Commands::DeleteVersion { app, version } => delete_version(&app, &version, token).await,
-        Commands::DeleteApp { app } => delete_app(&app, token).await,
-        Commands::Sqlite { command } => sqlite_command(command, token).await,
+        AppCommands::Status { app } => status(&app, token).await,
+        AppCommands::Deployments { app, limit } => deployments(&app, limit, token).await,
+        AppCommands::Events { app, limit } => events(&app, limit, token).await,
+        AppCommands::Logs { app, limit } => logs(&app, limit, token).await,
+        AppCommands::Rollback { app, version } => rollback(&app, &version, token).await,
+        AppCommands::DeleteVersion { app, version } => delete_version(&app, &version, token).await,
+        AppCommands::Delete { app } => delete_app(&app, token).await,
+        AppCommands::Env { command } => env_command(command, token).await,
+        AppCommands::Secrets { command } => secret_command(command, token).await,
+        AppCommands::Sqlite { command } => sqlite_command(command, token).await,
     }
 }
 
@@ -515,12 +527,6 @@ async fn list_apps(token: Option<String>) -> Result<()> {
     print_json(&response)
 }
 
-async fn list_nodes(token: Option<String>) -> Result<()> {
-    let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
-    let response = client.nodes().await?;
-    print_json(&response)
-}
-
 async fn deployments(app: &str, limit: u32, token: Option<String>) -> Result<()> {
     let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = client.deployments(app, limit).await?;
@@ -533,22 +539,24 @@ async fn events(app: &str, limit: u32, token: Option<String>) -> Result<()> {
     print_json(&response)
 }
 
-async fn env_command(command: EnvCommands, token: Option<String>) -> Result<()> {
+async fn env_command(command: AppEnvCommands, token: Option<String>) -> Result<()> {
     let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = match command {
-        EnvCommands::List { app } => client.env_list(&app).await?,
-        EnvCommands::Set { app, name, value } => client.env_set(&app, &name, &value).await?,
-        EnvCommands::Delete { app, name } => client.env_delete(&app, &name).await?,
+        AppEnvCommands::List { app } => client.env_list(&app).await?,
+        AppEnvCommands::Set { app, name, value } => client.env_set(&app, &name, &value).await?,
+        AppEnvCommands::Delete { app, name } => client.env_delete(&app, &name).await?,
     };
     print_json(&response)
 }
 
-async fn secret_command(command: SecretCommands, token: Option<String>) -> Result<()> {
+async fn secret_command(command: AppSecretCommands, token: Option<String>) -> Result<()> {
     let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     let response = match command {
-        SecretCommands::List { app } => client.secrets_list(&app).await?,
-        SecretCommands::Set { app, name, value } => client.secrets_set(&app, &name, &value).await?,
-        SecretCommands::Delete { app, name } => client.secrets_delete(&app, &name).await?,
+        AppSecretCommands::List { app } => client.secrets_list(&app).await?,
+        AppSecretCommands::Set { app, name, value } => {
+            client.secrets_set(&app, &name, &value).await?
+        }
+        AppSecretCommands::Delete { app, name } => client.secrets_delete(&app, &name).await?,
     };
     print_json(&response)
 }
@@ -577,16 +585,16 @@ async fn delete_app(app: &str, token: Option<String>) -> Result<()> {
     print_json(&response)
 }
 
-async fn sqlite_command(command: SqliteCommands, token: Option<String>) -> Result<()> {
+async fn sqlite_command(command: AppSqliteCommands, token: Option<String>) -> Result<()> {
     let client = api::ApiClient::new(config::CliConfig::resolve(token)?);
     match command {
-        SqliteCommands::Backup { app, out } => {
+        AppSqliteCommands::Backup { app, out } => {
             let bytes = client.sqlite_backup(&app).await?;
             fs::write(&out, bytes).with_context(|| format!("writing {}", out.display()))?;
             info!(path = %out.display(), app = %app, "sqlite backup written");
             Ok(())
         }
-        SqliteCommands::Restore { app, input } => {
+        AppSqliteCommands::Restore { app, input } => {
             let bytes = fs::read(&input).with_context(|| format!("reading {}", input.display()))?;
             let response = client.sqlite_restore(&app, &bytes).await?;
             print_json(&response)
@@ -625,7 +633,7 @@ fn parse_deploy_args(app: Option<String>, args: Vec<String>) -> Result<(Option<S
             }
             Ok((Some(legacy_app.clone()), version.clone()))
         }
-        _ => bail!("deploy expects `<version>` or `<app> <version>`"),
+        _ => bail!("`ember app deploy` expects `<version>` or `<app> <version>`"),
     }
 }
 
@@ -674,7 +682,7 @@ async fn ensure_app_exists(client: &api::ApiClient, app: &str, interactive: bool
     }
     if !interactive || !io::stdin().is_terminal() {
         bail!(
-            "cloud app `{app}` does not exist; create it with `ember create-app --app {app}` or update worker.toml"
+            "cloud app `{app}` does not exist; create it with `ember app create --app {app}` or update worker.toml"
         );
     }
     if !prompt_yes_no(&format!(

@@ -70,7 +70,7 @@ CLI for:
 
 - `ember init` to scaffold a minimal worker project
 - `ember build` and `ember dev` for local iteration
-- `ember whoami/publish/deploy/...` for the hosted embercloud control plane
+- `ember whoami` and `ember app ...` for the hosted embercloud control plane
 
 ### `ember-sdk`
 
@@ -139,8 +139,8 @@ returned token locally:
 ```bash
 ember login
 ember whoami
-ember publish
-ember deploy <version>
+ember app publish
+ember app deploy <version>
 ```
 
 `ember login` starts a temporary localhost callback, opens the embercloud sign-in page in your

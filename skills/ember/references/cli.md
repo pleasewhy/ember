@@ -112,34 +112,52 @@ ember whoami
 ember logout
 ```
 
-### `ember publish`
+### `ember app`
+
+所有云端 app 维度操作现在统一收敛到 `ember app ...`：
+
+- `ember app list`
+- `ember app create`
+- `ember app status`
+- `ember app publish`
+- `ember app deploy`
+- `ember app deployments`
+- `ember app events`
+- `ember app logs`
+- `ember app rollback`
+- `ember app delete-version`
+- `ember app delete`
+- `ember app env ...`
+- `ember app secrets ...`
+- `ember app sqlite ...`
+
+### `ember app publish`
 
 ```bash
-ember publish
-ember publish --manifest ./worker.toml
+ember app publish
+ember app publish --manifest ./worker.toml
 ```
 
-### `ember deploy <app> <version>`
+### `ember app deploy <app> <version>`
 
 ```bash
-ember deploy hello-worker <version>
+ember app deploy hello-worker <version>
 ```
 
 ### 查询命令
 
-- `ember apps`
-- `ember nodes`
-- `ember status <app>`
-- `ember deployments <app> --limit <n>`
-- `ember events <app> --limit <n>`
-- `ember logs <app> --limit <n>`
+- `ember app list`
+- `ember app status <app>`
+- `ember app deployments <app> --limit <n>`
+- `ember app events <app> --limit <n>`
+- `ember app logs <app> --limit <n>`
 
 ### 回滚和删除
 
 ```bash
-ember rollback hello-worker <old-version>
-ember delete-version hello-worker <version>
-ember delete-app hello-worker
+ember app rollback hello-worker <old-version>
+ember app delete-version hello-worker <version>
+ember app delete hello-worker
 ```
 
 ## 6. 环境变量和 Secret
@@ -147,24 +165,24 @@ ember delete-app hello-worker
 环境变量：
 
 ```bash
-ember env list hello-worker
-ember env set hello-worker APP_ENV production
-ember env delete hello-worker APP_ENV
+ember app env list hello-worker
+ember app env set hello-worker APP_ENV production
+ember app env delete hello-worker APP_ENV
 ```
 
 Secret：
 
 ```bash
-ember secrets list hello-worker
-ember secrets set hello-worker openai-api-key <secret-value>
-ember secrets delete hello-worker openai-api-key
+ember app secrets list hello-worker
+ember app secrets set hello-worker openai-api-key <secret-value>
+ember app secrets delete hello-worker openai-api-key
 ```
 
 ## 7. SQLite 备份与恢复
 
 ```bash
-ember sqlite backup hello-worker ./backup.sqlite3
-ember sqlite restore hello-worker ./backup.sqlite3
+ember app sqlite backup hello-worker ./backup.sqlite3
+ember app sqlite restore hello-worker ./backup.sqlite3
 ```
 
 ## 8. 组件签名发布
@@ -180,7 +198,7 @@ ember sqlite restore hello-worker ./backup.sqlite3
 - `WKR_SIGNING_KEY_BASE64`
 
 ```bash
-ember publish
+ember app publish
 ```
 
 ## 9. 常见问题
@@ -191,7 +209,7 @@ ember publish
 rustup target add wasm32-wasip2
 ```
 
-### `ember publish` 提示找不到 artifact
+### `ember app publish` 提示找不到 artifact
 
 ```bash
 ember build

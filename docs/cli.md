@@ -175,12 +175,31 @@ ember dev --skip-build --addr 127.0.0.1:3000
 ember whoami
 ```
 
-### 5.5 `ember create-app`
+### 5.5 `ember app`
+
+所有云端 app 维度操作现在统一收敛到 `ember app ...`：
+
+- `ember app list`
+- `ember app create`
+- `ember app status`
+- `ember app publish`
+- `ember app deploy`
+- `ember app deployments`
+- `ember app events`
+- `ember app logs`
+- `ember app rollback`
+- `ember app delete-version`
+- `ember app delete`
+- `ember app env ...`
+- `ember app secrets ...`
+- `ember app sqlite ...`
+
+### 5.6 `ember app create`
 
 创建云端 app：
 
 ```bash
-ember create-app --app hello-worker
+ember app create --app hello-worker
 ```
 
 如果当前目录有 `worker.toml` 并且已经填写：
@@ -193,7 +212,7 @@ app = "hello-worker"
 也可以直接：
 
 ```bash
-ember create-app
+ember app create
 ```
 
 app 名当前限制为：
@@ -201,7 +220,7 @@ app 名当前限制为：
 - 仅允许字母、数字、`-`、`_`
 - 最长 48 个字符
 
-### 5.6 `ember publish`
+### 5.7 `ember app publish`
 
 上传当前 worker 的 Wasm 产物和 manifest，创建一个新版本。
 
@@ -215,69 +234,63 @@ app = "hello-worker"
 如果目标 app 不存在，CLI 会提示你创建：
 
 ```bash
-ember publish
+ember app publish
 ```
 
 或者指定 manifest：
 
 ```bash
-ember publish --manifest ./worker.toml
+ember app publish --manifest ./worker.toml
 ```
 
-### 5.7 `ember deploy`
+### 5.8 `ember app deploy`
 
 把某个版本切换成当前运行版本。
 
 新写法会优先从 `worker.toml` 读取 `[embercloud].app`：
 
 ```bash
-ember deploy <version>
+ember app deploy <version>
 ```
 
 兼容旧写法：
 
 ```bash
-ember deploy hello-worker <version>
+ember app deploy hello-worker <version>
 ```
 
 也可以显式指定：
 
 ```bash
-ember deploy --app hello-worker <version>
+ember app deploy --app hello-worker <version>
 ```
 
-### 5.8 查询命令
+### 5.9 `ember app` 查询命令
 
-平台级查询：
-
-- `ember apps`
-- `ember nodes`
-
-单应用查询：
-
-- `ember status <app>`
-- `ember deployments <app> --limit <n>`
-- `ember events <app> --limit <n>`
-- `ember logs <app> --limit <n>`
+- `ember app list`
+- `ember app status <app>`
+- `ember app deployments <app> --limit <n>`
+- `ember app events <app> --limit <n>`
+- `ember app logs <app> --limit <n>`
 
 示例：
 
 ```bash
-ember apps
-ember status hello-worker
-ember logs hello-worker --limit 50
+ember app list
+ember app status hello-worker
+ember app logs hello-worker --limit 50
 ```
 
 说明：
 
-- `ember status <app>` 会先直接显示该应用的访问地址，再输出完整 JSON
-- `ember apps` 会先列出每个 app 的访问地址，再输出完整 JSON
+- `ember app status <app>` 会先直接显示该应用的访问地址，再输出完整 JSON
+- `ember app list` 会先列出每个 app 的访问地址，再输出完整 JSON
 - 当前公网访问地址格式默认是 `https://<app_id>.transairobot.fun`
 
 示例输出：
 
 ```text
-$ ember status test
+$ ember app status test
 URL: https://app-010c8fa84161fd8d.transairobot.fun
 {
   "data": {
@@ -293,19 +306,19 @@ URL: https://app-010c8fa84161fd8d.transairobot.fun
 回滚：
 
 ```bash
-ember rollback hello-worker <old-version>
+ember app rollback hello-worker <old-version>
 ```
 
 删除版本：
 
 ```bash
-ember delete-version hello-worker <version>
+ember app delete-version hello-worker <version>
 ```
 
 删除应用：
 
 ```bash
-ember delete-app hello-worker
+ember app delete hello-worker
 ```
 
 ## 6. 环境变量和 Secret
@@ -315,19 +328,19 @@ ember delete-app hello-worker
 查看：
 
 ```bash
-ember env list hello-worker
+ember app env list hello-worker
 ```
 
 设置：
 
 ```bash
-ember env set hello-worker APP_ENV production
+ember app env set hello-worker APP_ENV production
 ```
 
 删除：
 
 ```bash
-ember env delete hello-worker APP_ENV
+ember app env delete hello-worker APP_ENV
 ```
 
 ### 6.2 Secret
@@ -335,19 +348,19 @@ ember env delete hello-worker APP_ENV
 查看：
 
 ```bash
-ember secrets list hello-worker
+ember app secrets list hello-worker
 ```
 
 设置：
 
 ```bash
-ember secrets set hello-worker openai-api-key <secret-value>
+ember app secrets set hello-worker openai-api-key <secret-value>
 ```
 
 删除：
 
 ```bash
-ember secrets delete hello-worker openai-api-key
+ember app secrets delete hello-worker openai-api-key
 ```
 
 在代码里，secret 通常通过 `worker.toml` 映射成环境变量：
@@ -364,18 +377,18 @@ OPENAI_API_KEY = "secret://openai-api-key"
 备份：
 
 ```bash
-ember sqlite backup hello-worker ./backup.sqlite3
+ember app sqlite backup hello-worker ./backup.sqlite3
 ```
 
 恢复：
 
 ```bash
-ember sqlite restore hello-worker ./backup.sqlite3
+ember app sqlite restore hello-worker ./backup.sqlite3
 ```
 
 ## 8. 组件签名发布
 
-如果你的平台要求组件签名，在执行 `ember publish` 之前设置：
+如果你的平台要求组件签名，在执行 `ember app publish` 之前设置：
 
 - `EMBER_SIGNING_KEY_ID`
 - `EMBER_SIGNING_KEY_BASE64`
@@ -388,7 +401,7 @@ ember sqlite restore hello-worker ./backup.sqlite3
 然后正常执行：
 
 ```bash
-ember publish
+ember app publish
 ```
 
 ## 9. 最常用的三条链路
@@ -407,17 +420,17 @@ ember dev --addr 127.0.0.1:3000
 
 ```bash
 ember login
-ember publish
-ember deploy hello-worker <version>
-ember status hello-worker
+ember app publish
+ember app deploy hello-worker <version>
+ember app status hello-worker
 ```
 
 ### 9.3 管理一个已上线服务
 
 ```bash
-ember logs hello-worker --limit 100
-ember env set hello-worker APP_ENV production
-ember rollback hello-worker <old-version>
+ember app logs hello-worker --limit 100
+ember app env set hello-worker APP_ENV production
+ember app rollback hello-worker <old-version>
 ```
 
 ## 10. 常见问题
@@ -430,7 +443,7 @@ ember rollback hello-worker <old-version>
 rustup target add wasm32-wasip2
 ```
 
-### `ember publish` 提示找不到 artifact
+### `ember app publish` 提示找不到 artifact
 
 先执行：
 

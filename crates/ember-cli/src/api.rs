@@ -112,15 +112,6 @@ impl ApiClient {
         .await
     }
 
-    pub async fn nodes(&self) -> Result<Value> {
-        self.request(
-            self.http
-                .get(self.url("/v1/nodes"))
-                .bearer_auth(&self.config.token),
-        )
-        .await
-    }
-
     pub async fn deployments(&self, app: &str, limit: u32) -> Result<Value> {
         self.request(
             self.http

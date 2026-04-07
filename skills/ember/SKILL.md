@@ -25,7 +25,7 @@ description: Use for Ember worker development and integration with ember-cli, em
 ## 接入规则
 
 - 最小本地开发链路优先使用：`ember init -> ember build -> ember dev`
-- 需要平台交互时，优先走：`ember login -> ember publish -> ember deploy`
+- 需要平台交互时，优先走：`ember login -> ember app publish -> ember app deploy`
 - 如果是临时 token 调试或自动化脚本，再显式传 `--token` 或设置 `EMBER_TOKEN`
 - 简单 HTTP handler 可直接用 `wstd::http`
 - 路由、中间件、统一响应、SQLite 持久化优先用 `ember-sdk`
@@ -43,7 +43,7 @@ description: Use for Ember worker development and integration with ember-cli, em
 - 把本地 worker 发布到兼容控制面并回滚版本
 - 设计与 `ember-cli` 兼容的控制面 HTTP API
 - 把 `ember-runtime` 和 `ember-platform-host` 嵌入自己的平台宿主
-- 排查 `ember whoami`、`ember publish`、`ember deploy`、`ember logs` 相关问题
+- 排查 `ember whoami`、`ember app publish`、`ember app deploy`、`ember app logs` 相关问题
 
 ## 参考资料
 
